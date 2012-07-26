@@ -1,0 +1,7 @@
+title: mysqldump user defined functions
+date: 2010/07/01 22:20:33 -0700
+tags: []
+author: Aaron Blohowiak
+alias: /mysqldump-user-defined-functions
+
+If you are doing a mysqldump and you seem to be missing your UDF or multiple UDFs, then you ran into the same issue that i did.  For some reason, mysqldump does not include user defined functions in the dump.  In order to enable this, you have to include the <code>--routines</code> command line option.  Ugh.

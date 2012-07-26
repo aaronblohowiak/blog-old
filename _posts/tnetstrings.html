@@ -1,0 +1,46 @@
+title: TNetstrings
+date: 2011/05/14 17:06:00 -0700
+tags: []
+author: Aaron Blohowiak
+alias: /tnetstrings
+
+<p>TNetstrings (<a href="http://tnetstrings.org/">http://tnetstrings.org/</a>) could be awesome. &nbsp;Its simplicity kicks the ass of BSON (<a href="http://bsonspec.org/">http://bsonspec.org/</a>), another JSON-inspired serialization format. Additionally, it is *very* easy to parse. &nbsp;Unfortunately, it requires a schema if you want to serialize JavaScript Numbers. &nbsp;This is entirely fixable with only a very minor addition.</p>
+<div>
+<p />
+<div>
+<div>I propose TNetstrings adds a "." FP64 type.</div>
+</div>
+</div>
+<p />
+<div><strong>Add IEEE 754 Number Type so it is isomorphic with JSON.</strong></div>
+<div><br />The most important reason to do this is because TNetstrings is currently failing in its stated objective to "<span style="font-family: Times; font-size: medium;">allow for the same data structures as</span><span style="font-family: Times; font-size: medium;">&nbsp;</span><span style="font-family: Times; font-size: medium;"><a href="http://www.json.org/">JSON</a></span>". JSON only specifies 7 data types. One of those is the IEEE 754 <a href="http://en.wikipedia.org/wiki/Double_precision_floating-point_format">double precision floating point</a> Currently, TNetstrings has an "INT" type that is an ASCII-encoded integer, but it has no representation of a float.</div>
+<p />
+<div>Now, there are problems with serializing floats: they are large, and different languages may support many float types with varying precision. &nbsp; At 8 bytes, it is rather large, so TNetstrings should not remove the INT type as it would make for a fast and small presentation of numbers between 0 and 9999999. &nbsp;The remaining issue is then precision. The TNetstrings site says they would add a float type "<span style="font-family: Times; font-size: medium;">if we can find the specification for that which doesn't determine accuracy.</span>" This is directly at odds with the stated goal to provide the same data structures as JSON.</div>
+<p />
+<div>Zed&nbsp;Shaw <a href="http://twitter.com/#!/zedshaw/status/68834211842367488">says</a>&nbsp;</div>
+<p />
+<blockquote class="gmail_quote" style="margin-top: 0px; margin-right: 0px; margin-bottom: 0px; margin-left: 0.8ex; border-left-width: 1px; border-left-color: #cccccc; border-left-style: solid; padding-left: 1ex;">We'd add floats if we could come with a "reliable" spec. So far all we've found it "it's a fucking %f output, deal."</blockquote>
+<p />
+<div>The IEEE 754 double precision floating point number is very well specified and widely supported. &nbsp;It is also the JS number type. TNetstrings could provide for arbitrary serialization of JSON objects if and only if it supports the humble double.</div>
+<p />
+<div>The current <a href="http://twitter.com/#!/zedshaw/status/68807993940127744">suggested solution</a> is: &nbsp;</div>
+<p />
+<blockquote class="gmail_quote" style="margin-top: 0px; margin-right: 0px; margin-bottom: 0px; margin-left: 0.8ex; border-left-width: 1px; border-left-color: #cccccc; border-left-style: solid; padding-left: 1ex;">Send it as a string, have the receiver know it's a float. That's all we got for now.</blockquote>
+<p />
+<div>There are two problems with this: requiring schema, and being an incomplete standard.</div>
+<p />
+<div><strong>Requiring Schema</strong></div>
+<p />
+<div>Requiring that the receiver know the structure of the object ahead of time means that any *deserializer* has to be able to accept some kind of schema in order to know which strings are actually floats in disguise. &nbsp;Alternatively, you could structure your code such that your application code walks the deserialized object and performs the string to float type conversion. Either way, it means that any infrastructure that would use deserialized objects has know the schema ahead of time.</div>
+<p />
+<div>In CS lingo, it means that TNetstrings is not isomorphic -- TNetstrings.deserialize(TNetstrings.serialize(object)).deepEqual(object) is false if any of your numbers have a fractional&nbsp;component&nbsp;(nonzero digits to the right of the decimal, like 1.2.) <strong>&nbsp;A serialization format that is self-describing with a type system is retarded if it is inconsistently isomorphic depending on the value of the data being serialized.</strong></div>
+<p />
+<div>Requiring a schema complicates the interface and introduces an&nbsp;unnecessary&nbsp;burden on the programmer -- the type information is available at runtime, why require it at code time?</div>
+<p />
+<div>If TNetstrings had a float type, then it would be a viable "drop in" JSON replacement with no additional work. &nbsp;The difference between a drop-in replacement and a replacement that breaks unless you specify every place where a Number might be a Float is huge. &nbsp;It means that framework designers and library providers could use TNetstrings instead of JSON with <strong>no additional work</strong>&nbsp;for their consumers.</div>
+<p />
+<div>You are going to want floats if you are tracking averages, doing anything with lat/long, or modeling speed and direction in a game. &nbsp;Currently, I use JSON for IPC and for persistence. &nbsp;I'd *much* rather be able to use a faster standard if there was a drop-in replacement. &nbsp;However, I don't want to rework my code to include schemas if I can avoid it.</div>
+<p />
+<div><strong>Incomplete Standard</strong></div>
+<p />
+<div>Since TNetstrings does not specify a floating point type, it means that you also must have a standard for specifying the schema of the messages and a standard for a representation of the double type (though 8:, is the only sane one.) &nbsp;Since TNetstrings doesn't standardize the number-description schema, it means that application authors must provide their own -- which reduces interoperability and code-reuse.</div>

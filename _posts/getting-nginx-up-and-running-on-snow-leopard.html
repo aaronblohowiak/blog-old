@@ -1,0 +1,26 @@
+title: Getting NginX up and running on Snow Leopard with macports
+date: 2010/06/17 22:16:36 -0700
+tags: []
+author: Aaron Blohowiak
+alias: /getting-nginx-up-and-running-on-snow-leopard
+
+so you've <code>sudo port install nginx</code> and everything seemed to go swimmingly.  But when you check <a href="http://localhost/">http://localhost/</a> in your browser, things don't seem to work.  Ugh.
+
+Here's the quick list of what you need to do to make it actually work:<ol>
+	<li>Ensure that "Personal Web Sharing" is disabled in system preferences -&gt; sharing.  this will turn off apache</li>
+	<li>make sure you ran <code>sudo port load nginx</code> (running it twice will error but wont hurt anything)</li>
+	<li>next, you have to set up your nginx.conf -- the easiest way is to copy the example: <code>sudo cp /opt/local/etc/nginx/nginx.conf.example /opt/local/etc/nginx/nginx.conf</code>
+</li>
+	<li>we're still not there yet because the default example nginx.conf points to mime.types which doesn't exist. wtf? so, we have to do another move: <code>sudo cp  /opt/local/etc/nginx/mime.types.example /opt/local/etc/nginx/mime.types</code>
+</li>
+</ol>
+
+That should be it. 
+
+You're probably going to want to create aliases to the following commands to fully stop and start nginx (otherwise the monitoring process will keep bringing it back when you try to shut it down:)
+<ul>
+	<li><code>sudo launchctl unload -w /Library/LaunchDaemons/org.macports.nginx.plist</code></li>
+	<li><code>sudo launchctl unload -w /Library/LaunchDaemons/org.macports.nginx.plist</code></li>
+</ul>
+
+Try running the stop and start as above and then open up <a href="http://localhost/">http://localhost/</a> in your browser.  You should see the "Welcome to nginx!" page.   Now go build something awesome.

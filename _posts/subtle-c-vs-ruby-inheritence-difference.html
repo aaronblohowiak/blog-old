@@ -1,0 +1,26 @@
+title: Subtle C# vs Ruby Inheritence Difference
+date: 2009/08/17 03:36:08 -0700
+tags: []
+author: Aaron Blohowiak
+alias: /subtle-c-vs-ruby-inheritence-difference
+
+This subtle differences in ruby and C#'s inheritence semantics bit me in the ass.<p />In Ruby:<br /><div class="CodeRay">
+  <div class="code"><pre>class A
+  def foo
+    bar
+  end
+  def bar
+    &quot;in a&quot;
+  end
+end
+
+class B &lt; A
+  def bar
+    &quot;in b&quot;
+  end
+end</pre></div>
+</div>
+Calling "B.new.foo" will output "in b".  I assumed this is how method overriding worked in C#, but that was a mistake. The same example in C# would output "in a", because the `bar` referenced in A is not a message (like it is in ruby,) the compiler just sticks in the reference to the locally defined function.   An hour, a fistful of hair, and a call to a good friend (thanks AJ) later, I came to realize that in order to get the same kind of behavior, you have to use the "virtual" and "override" keywords in your classes' method signatures.<p />This is a great article that explains it all: <a href="http://www.prestwood.com/ASPSuite/kb/document_view.asp?qid=101472" target="_blank">C# Overriding (virtual, override)</a><p /><div class="zemanta-pixie"><div class='p_embed p_image_embed'>
+<img alt="Media_httpimgzemantac_babjz" height="1" src="/media/getfile/files.posterous.com/import-iyfl/ElBEtJwcHcxpmsdepArtAwatzkCIzFuAjhflHiHgivmnzsgtmzFtcaygyniC/media_httpimgzemantac_baBjz.gif.scaled696.gif" width="1" />
+</div>
+</div>

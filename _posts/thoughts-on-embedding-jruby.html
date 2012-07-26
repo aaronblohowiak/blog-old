@@ -1,0 +1,18 @@
+title: Thoughts on embedding JRuby
+date: 2011/01/28 11:21:00 -0800
+tags: []
+author: Aaron Blohowiak
+alias: /thoughts-on-embedding-jruby
+
+<p>I covered the initial JRuby-Lift integration on <a href="http://liftjr.org/initial-spike-into-jruby-lift-integration-a-s" title="Lift JRuby">the LiftJR blog</a>.</p>
+<p>When trying to get this running, we did a bit of research. &nbsp;The blogs and wiki posts were high-level or had too many options, so we ended up figuring things out using JRuby's excellent JavaDoc. &nbsp;However, a "working man's guide" to embedding JRuby would have been useful. &nbsp;I hope that you find this helpful:</p>
+<ol>
+<li>Import the right packages (org.jruby.*, org.jruby.embed.*, org.jruby.runtime.builtin.* )</li>
+<li>Instantiate your "Scripting Container". Pass in LocalContextScope.THREADSAFE as the ScriptingContainer constructor's parameter if you want thread safety (you probably do.)</li>
+<li>Use the scriptingContainer to eval the contents of an input stream (like a file with a class definition): scriptingContainer.parse(inputStream, filename).run()</li>
+<li>Get a handle to the jruby runtime: jrubyScriptingContainer.getProvider().getRuntime() and the thread context: runtime.getCurrentContext()</li>
+<li>Use the 'runtime' for getting a class by name, creating a new symbol and other global operations.   Calling runtime.fastNewSymbol("pants") from java/scala will return a handle to :pants in your ruby environment.  runtime.fastGetClass("ActiveRecord::Base") would return a handle to the relevant class.</li>
+<li>You use the thread context when actually invoking methods on objects. myRubyClass.callMethod(threadContext, methodName, Array(arg1, arg2...) )</li>
+<li>The JRuby has done an awesome job with getting the java interfaces right with the JRuby objects. &nbsp;However, sometimes you just want a plain old java object. &nbsp;Every RubyObject has a .toJava method; use it to get back the java equivalent of your ruby structure: .toJava(classOf[Boolean])</li>
+</ol>
+<p>That should be enough to get you started. &nbsp;Let me know if you have any questions.</p>

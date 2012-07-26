@@ -1,0 +1,65 @@
+title: Taming the complexity of Weapons Systems in Unity3d using C# Interfaces
+date: 2009/08/12 08:55:32 -0700
+tags: []
+author: Aaron Blohowiak
+alias: /taming-the-complexity-of-weapons-systems-in-u
+
+<b>I confess</b>:  A lot of the programming I do for unity is in UnityJS -- the bastard language of Unity and ECMAScript that lets you get things working without a lot of overhead.  It is <b>great</b> for prototyping.  We've all taken a prototpe too far and regretted the<i> bird's nes</i>t of code that ensues.   Here's an example of a refactoring that I recently did to accommodate the increasing complexity of the code base, to help transition from prototype to product.  It takes advantage of a C# language feature that UnityJS <b>lacks completely.</b>
+
+<h2>The Complexity Infects</h2>Halt Yablonski, our hero, was prototyped with "just" a shotgun.  The shotgun was instantiated and parented to the character, and a script on the character had the script that controlled firing.  What all is  involved with firing?  Well, there is the game-level stuff ( removing ammo, rate-limiting, ) and the world-level stuff (activating animations, instantiating particle effects, throwing collider.)  With just one weapon, the character script simply had a ShootMe() method.  Then it was time to play with fire, and add in the flamethrower.  Well, I could just put in a whole bunch of if statements, which would be fine for two weapons, but what about when I want to add in the baseball bat?  And the next weapon and the one after that? A whole crapton of if() statements?  does UnityJS have a `case` or `switch` statement?  Ew, it just stinks.  The character object suddenly is implementing the behavior for a great many other domain objects. What we want to do is pull that behavior out of the character script and divide it among the appropriate weapons.
+
+Cool.
+
+Okay, wait a minute.  That sounds great, but how do we do that, really?  Well, we could have a script for each weapon, and then send a message to the weapon on an action.  As long as we implement support for all the messages (which we make easier with some inheritance), then we should be o-k. Using SendMessage is really slow and what if we want to do things like ask a weapon if it is fireable or how much longer until the reload is done -- that kind of synchronous communication is all but impossible with SendMessage.  Also, what if we decide to add more messages later, how can we ensure that all of our weapons support all the messages?
+<h2>Interfaces to the rescue!</h2><b>In its simplest form, here is the weapon interface</b>
+<div class="CodeRay">
+  <div class="code"><pre>public interface IWeapon{
+        void Shoot();
+}</pre></div>
+</div>
+
+<b>So, our weapon would look like this:</b>
+<div class="CodeRay">
+  <div class="code"><pre>public class Shotty : MonoBehaviour, IWeapon {
+
+        private Controller controller;
+        void Awake(){
+                //in practice, i use the singleton technique instead of finding the game object. much faster ^_^
+                controller = (Controller) gameObject.GetComponent(&quot;Controller&quot;);
+                controller.Switched(this); // let the controller know we are done loading.
+        }
+
+        public void Shoot(){
+                Debug.Log(&quot;Bang&quot;);
+        }
+}</pre></div>
+</div>
+<b>
+Finally, here is the character script</b>
+<div class="CodeRay">
+  <div class="code"><pre>using UnityEngine;
+using System.Collections;
+
+public class Controller : MonoBehaviour{
+
+        public IWeapon weapon;
+        
+        public void Switched(IWeapon newWeapon){
+                Debug.Log(&quot;New Weapon&quot;);
+                weapon = newWeapon;
+                weapon.Shoot(); //just for demo purposes, 
+                        //normally this would be called elsewhere 
+        }
+}</pre></div>
+</div>
+
+So, this lets us switch weapons easily, and maintains the nice separation of concerns between the character script and the weapons script.  Now we can be free to implement the weapons however we like, but can use the type system to know that the weapon will have an appropriate response for everything I want to do with it.
+<h2>Why not inheritance?</h2>
+<i>If these objects all have to have the same methods, why not make them all descend from the same class?</i> Separation of concerns.  Just like it makes sense to separate out the weapon from the character, it makes sense to separate the weapon interface from the implementation.  Our Controller object shouldn't give a rat's ass about how the weapon is implemented! It only wants the guarantee that the objects it is passed work in the appropriate ways.
+<h2>Downsides</h2>
+It is a pain in the butt to get started. and totally not worth it for the early prototype phase.  As your needs and product vision mature, the need for feature *expansion* becomes more pressing than the need for feature *creation*.  Building a modular design that is used in only one configuration is a waste! You probably won't need it. 
+<h2>Bottom Line</h2>
+When we start getting unwieldy complexity,  we need to straighten things up. We give a name to each of the tasks that the code has to accomplish, then instead of having branches all over the place, we a) make the list of tasks generic by creating an interface and b) implement the interface for each type .  This way what was a really complex controller script now just becomes a simple controller script and a couple of other simple scripts for each type.  Now we can keep on adding new weapons without ever having to change the controller code!  Its hard to reduce the complexity any further than that.<p /><div class="zemanta-pixie"><div class='p_embed p_image_embed'>
+<img alt="Media_httpimgzemantac_xtpcb" height="1" src="http://getfile6.posterous.com/getfile/files.posterous.com/import-iyfl/djjxEdvccFpubylJHdgvAFrqHhnGBIiBvpnHwbpswGiGuaJuCmhzGFwsoBbD/media_httpimgzemantac_xtpcb.gif.scaled696.gif" width="1" />
+</div>
+</div>

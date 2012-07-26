@@ -1,0 +1,42 @@
+title: Setting up SSL, HSTS and an http -> https redirect with node.
+date: 2011/10/06 20:57:00 -0700
+tags: []
+author: Aaron Blohowiak
+alias: /setting-up-ssl-hsts-and-an-http-https-redirec
+
+<h2>Step 1: Generate your SSL key and certificate signing request:</h2>
+<p>Note: you'll have to put the domain name in as the "common name".</p>
+<div class="CodeRay">
+  <div class="code"><pre>openssl req -new -newkey rsa:2048 -nodes -keyout example.com.key -out example.com.csr</pre></div>
+</div>
+
+<h2>Step 2: Get your certificate</h2>
+<p>Log into GoDaddy or your friendly neighborhood certificate provider and go through their workflow. If you go with GoDaddy, you will get a zip file to download that contains an example.com.crt and a gd_bundle.crt</p>
+<h2>Step 3: Set up your node app&nbsp;and HSTS</h2>
+<div class="CodeRay">
+  <div class="code"><pre>require(&quot;https&quot;).createServer(function(req, res){
+     res.writeHead(200, {    'Content-Type': 'text/plain', 
+     &quot;Strict-Transport-Security&quot;: &quot;max-age=604800&quot;});
+     res.end('Hello from SSL!\n');
+   },{     
+     key: fs.readFileSync('ssl/example.com.key'),
+     cert: fs.readFileSync('ssl/example.com.crt'),
+     ca: fs.readFileSync('ssl/gd_bundle.crt') 
+   }).listen(443);</pre></div>
+</div>
+
+<p>This will get your server responding to SSL requests, and will require that future requests use SSL with&nbsp;&nbsp;<a href="http://en.wikipedia.org/wiki/HTTP_Strict_Transport_Security">HSTS</a>&nbsp;and the "Strict-Transport-Security" header.&nbsp;Sweet.</p>
+<p><span>The HSTS header in the example above is set to last for 604800 seconds, or about a week. &nbsp;This means that if anyone types in a link to <a href="http://example.com">http://example.com</a>, the browser will automatically change it to <a href="https://example.com">https://example.com</a> *without* going to <a href="http://example.com">http://example.com</a> first! Change&nbsp;</span>604800 seconds to whatever duration you feel comfortable with.</p>
+<p>Unfortunately, we can only specify HSTS from an HTTPS site. &nbsp;But how do we force SSL if someone comes to our site with plain HTTP ?</p>
+<h2>Step 4: Setting up redirect&nbsp;</h2>
+<p>To set up the redirect, you just call another function to create another server listening on the default www port 80, that includes the redirection status code and 'Location' headers:</p>
+<div class="CodeRay">
+  <div class="code"><pre>require(&quot;http&quot;).createServer(function(req, res){
+     res.writeHead(301, {
+       'Content-Type': 'text/plain', 
+       'Location':'https://'+req.headers.host+req.url
+     res.end('Redirecting to SSL\n');
+  }).listen(80);</pre></div>
+</div>
+
+<p>&nbsp;</p>

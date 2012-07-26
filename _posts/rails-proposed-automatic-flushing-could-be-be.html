@@ -1,0 +1,21 @@
+title: Rails' Proposed Automatic Flushing could be better.
+date: 2010/09/07 22:09:00 -0700
+tags: []
+author: Aaron Blohowiak
+alias: /rails-proposed-automatic-flushing-could-be-be
+
+<p>In response to&nbsp;<a href="http://yehudakatz.com/2010/09/07/automatic-flushing-the-rails-3-1-plan">http://yehudakatz.com/2010/09/07/automatic-flushing-the-rails-3-1-plan</a></p>
+<p>These are my assumptions:</p>
+<p><span style="font-family: Verdana; font-size: 12px; color: #828282;"><span style="color: #000000;"><ol>
+<li>The performance goal is to return http &amp; html headers as quickly as possible.</li>
+<li>&nbsp;Business logic belongs in the models, as triggered by method invocations from the controller.</li>
+<li>&nbsp;A good deal of time is spent on business logic and request handling (authentication / set-up / before_filter stuff.) Often, this requires network I/O to backend systems (or databases.) While some data retrieval is necessary only to render the view (and can thus be deferred gracefully,) other times your application logic depends the completion of these lengthy requests in order to complete the desired state modification.</li>
+<li>&nbsp;Since we want to return the headers as quickly as possible, we can either a) figure out how to send the headers before the controller or b) figure out how to delay the processing until after the controller.</li>
+</ol>
+<p style="margin-top: 8px; margin-bottom: 0px;"><strong>I think that that sending the headers *before* most of the controller's processing is better than hiding the processing in the view.</strong></p>
+<p style="margin-top: 8px; margin-bottom: 0px;">I like views that exclusively take data and format it for output. I like having the core business logic in the models, and I like having the system guards and request setup concentrated in the controllers. This way, I can have an exhaustive understanding of the tasks performed by an action without having to read through all of the views and their partials.</p>
+<p style="margin-top: 8px; margin-bottom: 0px;">If we hide some of the processing within model actions and call those model actions from the view, then I no longer can assume that all major processing / I/O has happened by simply reading the controller and the model methods it invokes. Instead, I also have to read all of the views.</p>
+<p style="margin-top: 8px; margin-bottom: 0px;">This violates the expectations I have about processing times and MVC.</p>
+</span>
+<p style="margin-top: 8px; margin-bottom: 0px;"><span style="color: #000000;">If instead, we could detect the requested format and return immediately with the headers, then we could perform the overwhelming majority of the processing while the browser is busy downloading static assets</span></p>
+</span></p>

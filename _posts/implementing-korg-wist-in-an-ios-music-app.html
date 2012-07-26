@@ -1,0 +1,60 @@
+title: Implementing Korg WIST in an iOS Music App
+date: 2012/02/13 22:46:00 -0800
+tags: [{"name":"development","id":101173138},{"name":"ios ","id":101173137},{"name":"Stochastik","id":101173140},{"name":"wist","id":101173139}]
+author: Aaron Blohowiak
+alias: /implementing-korg-wist-in-an-ios-music-app
+
+<p>This is for the lawyers:&nbsp;<span style="font-family: arial, sans-serif;">WIST is a trademark and software of KORG INC. &nbsp;All other trademarks are property of their respective owners. &nbsp;I am not an alien invader.</span></p>
+<p>This post details my experiences implementing WIST for my <a href="http://stochastik.xitive.com" title="Stochastik Drum Machine for iPad" target="_blank">amazing ipad drum machine</a>, which will hopefully be out soon (one more feature...) I am going to refer to WIST as wist from here on out, apologies in advance.</p>
+<p><strong>What is wist?</strong></p>
+<p>From a user's perspective, wist is a way to get two iOS music apps playing in sync.</p>
+<p>From a developer's perspective,&nbsp;wist&nbsp;is an iOS library you can use get your app playing in sync with other apps and brag about on your features list. &nbsp;It is BSD (3-clause) licensed and available for download here:&nbsp;<a href="http://code.google.com/p/korg-wist-sdk/" title="Korg WIST" target="_blank">http://code.google.com/p/korg-wist-sdk/</a></p>
+<p>Architecturally,&nbsp;wist&nbsp;is 3 things:</p>
+<ol>
+<li>An abstraction over GameCenter for making BlueTooth connections and negotiating the latency between them</li>
+<li>A User Interface</li>
+<li>A source and destination for start and stop events</li>
+</ol>
+<p>Thankfully, you don't have to worry about numbers 1 and 2, Korg has taken care of things for you. For number 3, You just tell the library when you are going to start and stop if you are the master and implement the callbacks for when you are the slave.</p>
+<p><strong>How to add WIST to your iOS Music App</strong></p>
+<ol>
+<li>Add the code to your project</li>
+<li>Instantiate the wist object</li>
+<li>Delegate and Control</li>
+<li>Establish a connection to another device</li>
+</ol>
+<p><strong>1. Adding the code to your project</strong></p>
+<p>Get the code (&nbsp;<a href="http://code.google.com/p/korg-wist-sdk/" title="Korg WIST" target="_blank">http://code.google.com/p/korg-wist-sdk/</a>&nbsp;), extract it and copy the files KorgWirelessSyncStart.h and&nbsp;KorgWirelessSyncStart.m to your project (Add Files...)</p>
+<p>If you are using ARC, you will get a bunch of errors. =/ To rememdy, go to "Build Phases" and where it says "Compile Sources (37 Items)" find the KorgWirelessSyncStart.m in the list and double click the area to the right, to add a compiler flag. &nbsp;Use the flags "-fno-objc-arc -w", without the quotes. &nbsp;This should compile just fine.</p>
+<p><strong>2. Instantiating the wist object</strong></p>
+<p>You're going to need to get a handle to the wist object whenever you start or stop your sequencer, and it will need to have your sequencer (or a proxy) as a delegate. &nbsp;import the header file and alloc/init a new KorgWirelessSyncStart object, and keep a reference to it handy. &nbsp;Add your class as its delegate. &nbsp;For that to work, you'll need to implement the KorgWirelessSyncStartDelegate protocol...</p>
+<p><strong>3. Delegate and Control</strong></p>
+<p>The trickiest thing about wist is getting your sequencer to start at the right time. &nbsp;You don't start it as soon as you get the callback nor as soon as you tell wist to notify the slave. &nbsp;It is a two step process: first, notify wist of your intentions and then go ahead and follow through.</p>
+<p>As a slave, the wist object calls:</p>
+<div class="CodeRay">
+  <div class="code"><pre>- (void)wistStartCommandReceived:(uint64_t)hostTime withTempo:(float)tempo</pre></div>
+</div>
+
+<p>tempo is the bpm as a float, which is pretty straightforward -- set this as the current tempo for your sequencer. &nbsp;hostTime is the time your sequencer should start. &nbsp;That time is in the future! &nbsp;If you start immediately you will be <em>way</em> too early; kind of like starting to play the song when the drummer starts counting off instead of when the drummer starts playing.</p>
+<p>In your non-audio code, you can get the current time using:</p>
+<div class="CodeRay">
+  <div class="code"><pre>#import &lt;mach/mach_time.h&gt;...mach_absolute_time();</pre></div>
+</div>
+
+<p>And from in your audio callback, you can get the current time using:</p>
+<div class="CodeRay">
+  <div class="code"><pre> UInt64 nowTime = inTimeStamp-&gt;mHostTime;</pre></div>
+</div>
+
+<p>So, you get the wistStartCommandReceived and then you start playing once the current time is the same as the requested hostTime. &nbsp;Since I am using an extremely small audio buffer (256 samples,) I cheated and just check to see if the current time is greater than the hostTime and if so, start playing immediately. &nbsp;I was planning on calculating the latency and having a sample-precise start time, but it was extremely tight sync with just this simple technique so I didn't bother.</p>
+<p>As a slave, the other method that wist calls is to let you know that a stop command was received. &nbsp;It is pretty straightforward; you can go ahead and just stop immediately whenever you get that.</p>
+<p>Things are slightly more tricky as a master.</p>
+<p>When a user goes to hit the play button, you check <span class="s1">(</span>wist_<span class="s1">.</span>isConnected<span class="s1"> &amp;&amp; </span>wist_<span class="s1">.</span>isMaster<span class="s1">) to see if you are connected and master, then you grab the current time as above (mach_absolute_time()) and call sendStartCommand with the <strong>current</strong>&nbsp;time. &nbsp;You also delay your own sequencer until the time returned by&nbsp;</span>estimatedLocalHostTime, which will be a time in the <strong>future</strong>.</p>
+<p>So, just to be clear, you&nbsp;<em>always delay your sequencer start until the time wist tells you.</em></p>
+<p>All that's left now is establishing the connection, and everything should "just work".</p>
+<p><strong>4.&nbsp;Establish a connection to another device</strong></p>
+<p>call&nbsp;searchPeer and wist will create a new view that mimics an alert box, blocking out the rest of the UI while trying to negotiate a connection. &nbsp;When the connection is established or the user hits cancel, the UI goes away. &nbsp;Everything is handled for you. &nbsp;When the connection drops, a dialogue will tell the user that happened, automatically.</p>
+<p><strong>5. Buy Stochastik!</strong></p>
+<p>That's all I have for now. &nbsp;I hope you liked this overview and tutorial. &nbsp;My app ( <a href="http://stochastik.xitive.com" title="my drum machine app" target="_blank">http://stochastik.xitive.com</a> ) should be in the app store soon. &nbsp;In the meantime, you can follow me at @aaronblohowiak or @xitiveinc on Twitter.</p>
+<p>&nbsp;</p>
+<p>I have some contract availability starting in may for iOS, RoR or Node.js work.</p>

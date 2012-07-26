@@ -1,0 +1,23 @@
+title: Building NodeJS on snow leopard
+date: 2010/05/03 03:46:27 -0700
+tags: []
+author: Aaron Blohowiak
+alias: /building-nodejs-on-snow-leopard
+
+If you're running macports and have upgraded from OSX 10.5 to Snow  Leopard (10.6), and your build of nodejs 0.1.93 fails, you might have to  re-install openssl.  The basic problem is that the dylib that you may  have built previously would have been built for the x386 architecture  whereas you need it to be built for x86_64.  thankfully, the solution is  easy to execute.. simply reinstall openssl!
+<blockquote class="posterous_short_quote">sudo  port install openssl</blockquote>
+and then retry your build.
+
+here  is some snippets from the error that i got to help you find this  solution if you're having the same problem:
+
+ld: warning: in  /opt/local/lib/libssl.dylib, file was built for i386 which is not the  architecture being linked (x86_64)
+ld: warning: in  /opt/local/lib/libcrypto.dylib, file was built for i386 which is not the  architecture being linked (x86_64)
+ld: warning: in  /opt/local/lib/libz.dylib, file was built for i386 which is not the  architecture being linked (x86_64)
+
+[snip]
+
+ld: symbol(s)  not found
+collect2: ld returned 1 exit status
+Build failed:  -&gt;  task failed (err #1):
+...
+make: *** [all] Error 1

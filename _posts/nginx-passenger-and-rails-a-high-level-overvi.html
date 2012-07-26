@@ -1,0 +1,28 @@
+title: Nginx, Passenger and Rails -- a high-level overview
+date: 2011/11/11 10:58:00 -0800
+tags: []
+author: Aaron Blohowiak
+alias: /nginx-passenger-and-rails-a-high-level-overvi
+
+<p>
+<div style="">One of my friends is somewhat new to Rails, and certainly new to rails deployment. &nbsp;He was a bit unclear about what role the different parts of the rails deployment stack (Nginx, passenger and rails) &nbsp;were in serving the request, so I wrote up the following and figured it might help other netizens, soI posted it here. &nbsp;Please drop me a line or leave a comment if something is unclear.</div>
+<p />
+<div style="">---</div>
+<p />
+<div style="">Sometimes, we use the terms "web server" or "application server" interchangeably, but for the purposes of this email, we mean distinctly different things.</div>
+<p />
+<div style="">NGINX or Apache are&nbsp;web/http servers -- that is, they bind to ports and accept incoming http requests from clients. &nbsp;They are the "front line" &nbsp;when it comes to client machines talking with your server (unless you have a load balancer or caching proxy, like haproxy or Varnish, but that is a discussion for another time.)</div>
+<p />
+<div style="">So, they accept the incoming connection from the user's computer and then they decide how to "handle" the request. &nbsp;With NGINX or Apache, you can do things like having different "Virtual Hosts", which is where you can set up a different strategy for different requests depending on things like the domain being requested, certain cookies or even if the url matches a certain pattern. &nbsp;Additionally, since NGINX or Apache sit at the front of the connection between the client and the server, it is common to handle things like GZIP encoding here (so your pages are compressed for browsers that support it.)</div>
+<p />
+<div style="">So: the job of the HTTP server is to handle lots of connections and figure out what "handler" to use. &nbsp;Most HTTP servers include a default filesystem handler that is able to serve static assets off the disk (images, css files, et cetera.)</div>
+<p />
+<div style="">Because the HTTP server handles raw client connections and is available to the internet, it is a big "attack surface" for malicious code, so it should run with very low permissions and do as little as possible. &nbsp;Even though you use root to start apache, it will change its user to "nobody" once it has opened the ports so hackers can't pwn your box even if they can crack apache remotely. &nbsp;</div>
+<p />
+<div style="">So, if your HTTP server is nice and small, how do you connect this to your web app's code? &nbsp;Well, that is where an application server comes in. &nbsp;Passenger is an application server (similar to PHP-FPM,) &nbsp;and its job is to connect to an http server and handle requests. &nbsp;The http server says to the application server "here is a bunch of details about the request, like the headers and the body, give me the response" and the application server gives it the response.</div>
+<p />
+<div style="">Passenger handles the connection between the HTTP server and your application code. &nbsp;When nginx starts up, it starts up passenger which starts your application in a few processes. &nbsp;When a request comes in, it goes to&nbsp;nginx, which gives it to passenger, which gives it to one of your application processes, which handles the request and then responds with the headers and html that are sent to the browser.</div>
+<p />
+<p />
+<div style="">This http server and application server distinction can be tricky if you are talking to people whose development stacks combine them -- for instance, you can run Java apps or Node.js apps with a BUILT-IN http server. &nbsp;You could do this with ruby using something like webrick, but that is very slow compared to nginx or apache.</div>
+</p>

@@ -1,0 +1,7 @@
+title: How do you shell out in NodeJS ?
+date: 2010/05/14 05:09:16 -0700
+tags: []
+author: Aaron Blohowiak
+alias: /how-do-you-shell-out-in-nodejs
+
+If you want to shell out in NodeJS, (equivelent to Open3 or popen3), just use the <a href="http://nodejs.org/api.html#child_process-spawn-82" target="_blank">child_process.spawn.</a> This is the great asynch streaming way to have stdin, stdout and stderr all hooked up for you.  If you want to fire off something in the background and get a callback when it is, done, you just use <a href="http://nodejs.org/api.html#child_process-exec-87" target="_blank">child_process.exec</a><p />This is also like a system() or using backticks in languages that support such things...

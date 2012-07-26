@@ -1,0 +1,7 @@
+title: RVM, capistrano sftp, scp and .bashrc
+date: 2010/10/22 01:53:00 -0700
+tags: []
+author: Aaron Blohowiak
+alias: /rvm-capistrano-sftp-scp-and-bashrc
+
+<p>I'm used to using RVM locally, but have just started with using it on remote machines. &nbsp;One thing that is annoying is having to type `rvm use X` when wanting to switch to the rvm ruby. &nbsp;So, one thing that i went and did was add such a line to the .bashrc which worked. &nbsp;The only weird thing is that this breaks scp transfers to the box (the only output is rvm's notification that it is using the correct version of ruby!!) &nbsp;So, the fix is to use RVM's rvm --default X and then remove the line from the .bashrc so scp will start working again. &nbsp;This is easy enough to figure out when you are scping from the command line, but when it is a tool like capistrano performing the transfer, all of this feedback is hidden =/ &nbsp;</p>

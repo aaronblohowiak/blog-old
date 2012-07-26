@@ -1,0 +1,33 @@
+title: How to Kill the process listening on a specific port
+date: 2011/10/10 14:32:00 -0700
+tags: [{"name":"bash","id":55390251},{"name":"linux","id":55390257},{"name":"lsof","id":55390253},{"name":"shell","id":55390255}]
+author: Aaron Blohowiak
+alias: /how-to-kill-the-process-listening-on-a-specif
+
+<p>When developing a service-oriented architecture, we may run into a situation where we want to kill the process that is listening on a given port.</p>
+<p>Sometimes, you can accomplish this with the wonderful <a href="http://linux.die.net/man/1/pkill" target="_blank">pkill</a> utility, for instance if there is only one process with that name. &nbsp;Otherwise, you will have to figure out which pid represents the running service and then use that to kill the service.</p>
+<p>It can be annoying to remember where the pidfiles are stored for each service, and sometimes you just want to use a sledghammer to whack the process.</p>
+<p>We can easily list the processes listening on a given port with:</p>
+<div class="CodeRay">
+  <div class="code"><pre>sudo lsof -n -P -i :22</pre></div>
+</div>
+
+<p>(using sudo because lsof may only have visibility to processes owned by the current user, depending on its compile settings.)</p>
+<p>So now, the trick is to turn the output, which looks like this:</p>
+<div class="CodeRay">
+  <div class="code"><pre>~/bin/ #&gt;lsof -n -P -i :1337
+COMMAND     PID           USER   FD   TYPE     DEVICE SIZE/OFF NODE NAME
+redis-ser 86099 aaronblohowiak    4u  IPv4 0x0e83c748      0t0  TCP *:1337 (LISTEN)</pre></div>
+</div>
+
+<p>into something that we can easily <code>kill -9</code>. (sledgehammer!)</p>
+<p>To do that, I just created a little bash script in my path named 'killport' and made sure to <code>chmod +x</code> it.</p>
+<div class="CodeRay">
+  <div class="code"><pre>#!/usr/bin/env bash
+
+kill -9 `lsof -n -P -i :$1 | (read; awk '{print $2}')`</pre></div>
+</div>
+
+<p>To use it, you just <code>sudo killport 1337</code> and it will whack whatever is listening on that port.</p>
+<h2>what is the read; awk stuff?</h2>
+<p>the <code>(read; awk ...)</code> will discard the first line of the lsof output and then awk will select the second field.  Note that since the <code>$2</code> is within single quotes, it will NOT get substituted with the second argument to our script.  However, since $1 isn't in single quotes, it WILL be substituted, which is how we "pass in" the port number to lsof from the command line.</p>

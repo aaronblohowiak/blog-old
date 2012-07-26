@@ -1,0 +1,27 @@
+title: Unicorn Heads Popping Off!!
+date: 2009/08/01 03:52:15 -0700
+tags: []
+author: Aaron Blohowiak
+alias: /unicorn-heads-popping-off
+
+Thanks to some hard work from my collaborator, I now have a model of the unicorn with its head separated.  When a unicorn gets hit with a shotgun and dies, its head pops off (every time for now, will be one of a few different death sequences eventually.) 
+<div class="youtube-video"><object height="344" width="425"><param name="movie" value="http://www.youtube-nocookie.com/v/GBOLXNc9RTM&amp;hl=en&amp;fs=1&amp;rel=0&amp;color1=0x3a3a3a&amp;color2=0x999999" />
+<param name="allowFullScreen" value="true" />
+<param name="allowscriptaccess" value="always" />
+<embed allowfullscreen="true" src="http://www.youtube-nocookie.com/v/GBOLXNc9RTM&amp;hl=en&amp;fs=1&amp;rel=0&amp;color1=0x3a3a3a&amp;color2=0x999999" allowscriptaccess="always" type="application/x-shockwave-flash" height="344" width="425"></embed></object></div>
+Sorry for the poor video quality... and sorry for the messy room, mom! ;)
+
+<strong>Implementation:</strong>
+When the unicorn dies, we actually replace the animated alive model with a new prefab, setting the position and rotation information to match the alive model.  We then delete the alive model.   This switcharoo lets us have two pieces of geometry (the head and body) where there used to only be one (the whole unicorn.)  This will let us have more alive unicorns on the screen at once, because the alive model is easier for the iPhone to render.  The decapitated prefab also has some physics.  We give the head a spherical collider so the rigidbody's center of gravity will be correct.  Then, we apply some Force, randomizing the strength and angle within a reasonable range  to keep the head-popping interesting.  Random.Range for the win!
+
+<strong>Lesson Learned:
+</strong>Overlapping colliders make bad things happen.  I was getting inconsistent and unexplained motion of the head.  I deleted all my Force scripts, tried restarting Unity and even reconstructing the decapitated prefab, all to no avail.  So, I started working backwards to the last "known good" state.  Eventually I figured out that the behavior was only happening when both the head and the body had colliders. The colliders where both spherical because they are the most efficient collider (center + radius instead of complicated poly bounds calculations.)  It turns out that simulating the overlap of the colliders made the physics engine assume there was some form of collision going on, so it tried to separate the colliding objects. Normally, this is exactly what we want to happen.  If somehow in our simulation the feet of our unicorn get into the floor, it should get bumped out because two things cant occupy the same space at the same time.  One solution would have been to have the objects on separate layers, but after some thought I realized there was no need for the body to have a collider at all. 
+
+<strong>Conclusion:</strong>
+So, the lesson once again is YAGNI (ya ain't gonna need it.)  If I had added the colliders only as-needed, then I would have a) avoided the problem, perhaps forever and b) instantly realized what was causing the problem if it did come up AFTER the system was known to work with only one collider.
+
+I think my roomba is losing a fight with something on the floor in the other room, so I have to go tend to that.
+<div class="zemanta-pixie"><div class='p_embed p_image_embed'>
+<img alt="Media_httpimgzemantac_lbjgj" height="1" src="http://getfile7.posterous.com/getfile/files.posterous.com/import-iyfl/GBDpAviaFJpxdjtsJBqdrnhfsvvADpussvnHzAjBcdvhBsFndGzkqdtuntuh/media_httpimgzemantac_lBjGj.gif.scaled696.gif" width="1" />
+</div>
+</div>

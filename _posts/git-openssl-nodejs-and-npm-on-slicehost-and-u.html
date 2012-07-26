@@ -1,0 +1,17 @@
+title: Git, OpenSSL, Node.js and npm on Slicehost and Ubuntu 10.04
+date: 2011/09/21 20:41:00 -0700
+tags: []
+author: Aaron Blohowiak
+alias: /git-openssl-nodejs-and-npm-on-slicehost-and-u
+
+<p>Copy and paste the following into your terminal:</p>
+<div class="CodeRay">
+  <div class="code"><pre>sudo su
+apt-get install -y gcc g++ git-core libssl-dev
+curl -lO https://raw.github.com/isaacs/nave/master/nave.sh
+chmod +x nave.sh
+./nave.sh usemain 0.4.11
+curl http://npmjs.org/install.sh | sh</pre></div>
+</div>
+
+<p>After you authenticate with your password, go get a cup of your beverage of choice, this is going to take a while :-)</p>

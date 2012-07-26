@@ -1,0 +1,34 @@
+title: mysqdump csv NULLs, \N, newlines and double-quote escaping.
+date: 2010/10/18 19:58:00 -0700
+tags: [{"name":"mysql ruby python csv fastercsv mysqldump","id":19112811}]
+author: Aaron Blohowiak
+alias: /mysqdump-csv-nulls-n-newlines-and-double-quot
+
+<p>So, i was trying to export a CSV from mysql to be processed by ruby and I was having a lot of trouble getting FasterCSV to parse the output. &nbsp;It turns out that&nbsp;MySQL cannot comply with the type described in RFC&nbsp;4180&nbsp;<a href="http://www.apps.ietf.org/rfc/rfc4180.html" title="RFC 4180">http://www.apps.ietf.org/rfc/rfc4180.html</a></p>
+<p><a href="http://www.apps.ietf.org/rfc/rfc4180.html" title="RFC 4180"></a>After some doc reading trial and error, I eventually got to this:</p>
+<p>mysqldump -u username --tab=/Users/ablohowiak/dumpoutput --fields-enclosed-by=\" &nbsp;--fields-terminated-by=, db_name table_name1 table_name2</p>
+<p>Which got me pretty close.. The downside is that mysql escapes newlines and quotes inside fields using the reverse solidus ( the "\" character ). &nbsp; This posed a real problem because CSVs don't need escaping! &nbsp;The only thing that you need to "escape" is the double-quote character, which should wrap all fields that contain newlines or double quotes. The proper way to escape a double-quote in CSV is to double your double quote, so " becomes "".&nbsp;</p>
+<p>This seemed to produce a good document, however I kept getting FasterCSV::MalformedCsvError from the mysqldump'ed csvs. &nbsp;ARGH! &nbsp;Upon closer inspection, I learned something... odd. &nbsp;When dumping to a flat file, mysql wants to preserve the difference between an empty string and a NULL string. &nbsp;I could argue about the merit in this choice until the cows come home. &nbsp;Regardless, they do not have any options that control the format of NULL values in the output of their --tab dump. &nbsp;The only format that NULL values can take is {escape}N. &nbsp;So, when the escape is its default \, you get \N. &nbsp;When the escape is ", you get "N, which is absolutely terrible.</p>
+<p>&nbsp;</p>
+<p>AAARRRRRRRGH!&nbsp;</p>
+<p>So, I ended up googling the internets. &nbsp;I even considered writing my own scanner-based csv parser for ruby (then, I looked at the clock =/ ) Surely, someone had solved this problem for me already!??!? &nbsp;Turns out, someone else got me most of the way there. &nbsp;I saw this post at StackOverflow:&nbsp;<a href="http://stackoverflow.com/questions/1105882/parsing-csv-files-with-escaped-newlines-in-ruby" title="Python mysqldump parsing on stack overflow">http://stackoverflow.com/questions/1105882/parsing-csv-files-with-escaped-newlines-in-ruby</a>&nbsp;and it lead me to looking into Python's csv library, which is very, very well done! &nbsp;While I wasn't having the newline problem that was mentioned in the post (yet) it did make me realize that i could have a separate wrapper and escape character in python, which is what I needed. &nbsp;So, I wrote a quick python script that could take the output of the dump specified above (enclosed by " and escaped with the default \ ) and turn it into a RFC 4180-compliant CSV.</p>
+<p>Here is that script:</p>
+<div class="CodeRay">
+  <div class="code"><pre>import os
+import csv
+import glob
+files = glob.glob(&quot;/Users/ablohowiak/dumpoutput/*.txt&quot;)
+
+for f in files:
+  myWriter = csv.writer(open('csvs/'+ os.path.basename(f), 'wb'), lineterminator='\r\n', escapechar='&quot;', delimiter=',', quotechar='&quot;', quoting=csv.QUOTE_ALL)
+  myReader = csv.reader(open(f, 'rb'), delimiter=',', quotechar='&quot;', escapechar='\\')
+  for row in myReader:
+    myWriter.writerow(row)</pre></div>
+</div>
+
+<p>&nbsp;</p>
+<p>So, I ran the output files from here through my ruby script. &nbsp;Everything worked OK for the first few files, and then I got another FasterCSV::MalformedCsvError. &nbsp;Crap! &nbsp;Once again, I inspected the file. &nbsp;This time, there was a newline in one of the fields. &nbsp;Referencing the SO post above, i changed from FasterCSV to CSV and everything worked. &nbsp;But it worked really, really slowly. &nbsp;Forget that. &nbsp;When I was reading through the FasterCSV documentation, i noticed that it tries to guess the line terminator for you. &nbsp;UGH. &nbsp;Don't guess! Use the standard!</p>
+<p>Basically, what was happening is that the FasterCSV scanner was hitting the first \r that was in the middle of a field, and *then* it tried to parse the line. &nbsp;Since the end of the field (and appropriate closing " ) hadn't been reached, what it thought was the first row was invalid. &nbsp;The fix was easy, I just had to pass in the&nbsp;:row_sep =&gt; "\r\n" option when calling FasterCSV.foreach and everything "just worked".</p>
+<p>So I never really solved the MySQL NULL thing. &nbsp;Now I have a bunch of CSVs that have "N" to indicate a NULL value. &nbsp;I went back and checked the original MySQL dumps and it turns out that in my 2million rows, I don't have any columns that exclusively contain an "N". &nbsp;So while it is brittle, it is a sufficient solution for me to just throw out any column containing "N", and instead use NULL.</p>
+<p>Tip of the hat to Python's csv library. &nbsp;Wag of the finger at mysql for their lack of options around NULL and wag of the finger to FasterCSV for letting magic ruin spec conformance.</p>
+<p>In all fairness to FasterCSV, if the first line is a header row that lacks \r or \n then it will correctly pick up the \r\n at the end.</p>

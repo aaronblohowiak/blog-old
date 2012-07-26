@@ -1,0 +1,35 @@
+title: Meta-Programming in JavaScript
+date: 2011/10/06 00:34:00 -0700
+tags: [{"name":"javascript","id":55071358},{"name":"meta-programming","id":55071392},{"name":"ruby","id":55071374}]
+author: Aaron Blohowiak
+alias: /meta-programming-in-javascript
+
+<p>tl;dr: meta-programming in javascript is just called &ldquo;programming&rdquo; because the methods used are familiar and used for non-meta-programming tasks, unlike ruby which requires a large set of specialized knowledge that is only used within the task of meta-programming.</p>
+<p>&nbsp;</p>
+<h2>Background:</h2>
+<p>On the node.js mailing list, <a href="http://groups.google.com/group/nodejs/browse_thread/thread/ab1c234ce841d356/2649dd52bdf1bba7">it was asked</a> &ldquo;why do we not hear about meta-programming in JavaScript?&rdquo;, and the answers varied from <a href="http://groups.google.com/group/nodejs/msg/1df7b3510c958c86">&ldquo;ruby rots people&rsquo;s brains&rdquo;</a> to <a href="http://groups.google.com/group/nodejs/msg/ae070f5fa359f94e">&ldquo;People in the JS community don&rsquo;t care that much about being super  DRY code.&rdquo;</a> to more reasoned discourse like <a href="http://groups.google.com/group/nodejs/msg/57b52fbfe7a182a2">&ldquo;JavaScript is a functional language, so you don&rsquo;t really need  it even if you knew what it meant.&rdquo;</a></p>
+<p>Finally, I would be remiss if I left out this delightful quip from Marak Squires:</p>
+<blockquote class="posterous_medium_quote">
+<p>I use to say, &ldquo;I can bend space and time with .toString() and eval()&rdquo;.</p>
+<p>I&rsquo;ve come to realize that it&rsquo;s generally better to not bend space and time  in JavaScript.</p>
+<p>&mdash; Marak</p>
+</blockquote>
+<p>As is my habit, I have a slightly more nuanced approach.</p>
+<p>&nbsp;</p>
+<h2>First things first.</h2>
+<p>Many nerd-rage-fests convolve towards a petty squabble over definitions. For now, wikipedia says:</p>
+<blockquote class="posterous_short_quote">
+<p>Metaprogramming is the writing of computer programs that write or manipulate other programs (or themselves) as their data</p>
+</blockquote>
+<p>sure, good enough for me.</p>
+<p>In practice, rubyists are used to flavors of eval, define_method and the venerable method_missing.</p>
+<p>&nbsp;</p>
+<h2>Meta-Programming in JavaScript</h2>
+<p>I submit that we don&rsquo;t talk about meta-programming in javascript because we just call it &ldquo;programming&rdquo; in javascript.</p>
+<p>In ruby, there are special tools (instance_eval, class_eval, .send, define_method, &amp;etc.) that you have to learn in order to have your code dynamically define the behavior of new objects and classes.  Because of this special vocabulary that is not part of the day-to-day vernacular of the rubyist, the application of these techniques are given a special consideration and status.</p>
+<p>In JavaScript, all you need are functions and objects for the vast majority of things that require the &ldquo;meta-programming&rdquo; arcana in ruby.</p>
+<p>To make things a little more concrete:  In ruby, extending an object or class by attaching behavior to an identifier (and binding that behavior to the object) is a special operation, that must be handled differently depending on how the behavior is defined and the kind of object being extended.  In JavaScript, you just assign a variable to a property and you&rsquo;re done.  Since dot notation and <code>[]</code> property access work just about the same, there is no <em>special knowledge</em> required of the javascript programmer to write code that defines behavior.</p>
+<p>To make things a little more abstract: most meta-programming is actually an application of currying or rebinding behavior to a different context.  Currying is trivial in JavaScript, rebinding is a little tricky: assign to a property of the context or use <code>call</code> or <code>apply</code>.  Since the javascript programmer frequently uses <code>call</code> in their day-to-day work, it is not &ldquo;arcana&rdquo; like <code>Module#instance_method</code> is within ruby-land.</p>
+<p>&nbsp;</p>
+<h3>But JavaScript doesn&rsquo;t have method_missing!</h3>
+<p>Unfortunately, it may be coming in future versions.  However, this is a moot point because <code>method_missing</code> is just dynamic dispatch.  This is trivially accomplished in javascript, but it requires collusion between the caller and callee.</p>

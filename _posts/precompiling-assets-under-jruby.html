@@ -1,0 +1,18 @@
+title: precompiling assets under jruby
+date: 2012/06/16 15:07:00 -0700
+tags: []
+author: Aaron Blohowiak
+alias: /precompiling-assets-under-jruby
+
+<p>If you are using the asset pipeline in rails 3.1 or 3.2 to compile and minify your js and css, you may observe that it is crazy slow. &nbsp;On an SPA-style app I am contributing to, it was taking over an hour on my macbook air (cpu-bound). &nbsp;The problem ultimately is that the javascript runtime available to ruby under java (rhino) is slow. &nbsp;While you may think 'oh, well i'll just precompile assets under c-ruby'.. this is a nice thought, but then you would have to swap your gemfile and .bundler directories and change your ruby platform every time you just wanted to precompile your assets. &nbsp;I did go through this excersize to confirm that it was an issue with jruby/rhino and not a code issue, and while it went much faster, the added complexity was not worth it.</p>
+<p>The solution to fast asset compilation under jruby is to use node as your js engine.</p>
+<p>Since everyone in this shop uses *nix-like operating systems, slipping this into production.rb worked just fine:&nbsp;</p>
+<div class="CodeRay">
+  <div class="code"><pre>if defined?(ExecJS) &amp;&amp; system('which node')
+      puts &quot;Using Node ExecJS runtime&quot;
+      ExecJS.runtime = ExecJS::Runtimes::Node
+    end</pre></div>
+</div>
+
+<p>This will do a rudimentary check to ensure that node is available and if it is, will setup ExecJS to use it as the runtime. &nbsp;It will only attempt any of this if ExecJS is loaded.</p>
+<p>This made our asset precompilation time go from about 79 minutes to 5 minutes. &nbsp;Under c-ruby/v8 it takes about 3 minutes. &nbsp;So, still not awesome but 'good enough'.</p>

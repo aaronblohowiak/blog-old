@@ -1,0 +1,18 @@
+title: Rails slow to load after being idle fix
+date: 2010/08/09 13:14:00 -0700
+tags: []
+author: Aaron Blohowiak
+alias: /rails-slow-to-load-after-being-idle-fix
+
+
+<div>Are you sick of your passenger-hosted rails app taking foreeeever to reload after you've been idle for a while? &nbsp;Put the following line in your global apache conf ( or your passenger.conf if you have one)</div>
+<p />
+<div>PassengerPoolIdleTime 0</div>
+<p />
+<div>This will stop passenger from unloading your process, so only the first one will go through the horrendous start up time. &nbsp;The default is 5 minutes of activity.</div>
+<p />
+<div>i cheated and looked at the documentation:</div>
+<p />
+<div><a href="http://www.modrails.com/documentation/Users%20guide.html#PassengerPoolIdleTime" title="Passenger configuration documentation" target="_blank">http://www.modrails.com/documentation/Users%20guide.html#PassengerPoolIdleTime</a></div>
+<p />
+<p>&nbsp;</p>

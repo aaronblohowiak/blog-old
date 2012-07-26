@@ -1,0 +1,50 @@
+title: Simplest way to install Lift on OSX
+date: 2011/01/11 23:22:45 -0800
+tags: []
+author: Aaron Blohowiak
+alias: /installing-lift-web-framework-on-osx-snow-leo
+
+<ol>
+<li>Make sure you have java installed
+<div class="CodeRay">
+  <div class="code"><pre>java -version</pre></div>
+</div>
+
+</li>
+<li>Make sure that you have $HOME/bin in your $PATH
+<div class="CodeRay">
+  <div class="code"><pre>echo $PATH</pre></div>
+</div>
+
+</li>
+<li>Install the `sbt` tool:
+<div class="CodeRay">
+  <div class="code"><pre>mkdir -p $HOME/bin
+echo &quot;Downloading sbt-launch jar&quot;
+curl -l http://simple-build-tool.googlecode.com/files/sbt-launch-0.7.4.jar &gt; $HOME/bin/sbt-launch.jar
+
+cat &lt;&lt;'EOF' &gt; ~/bin/sbt
+#!/usr/bin/env bash
+java -Xmx512M -jar `dirname $0`/sbt-launch.jar &quot;$@&quot;
+EOF
+
+chmod u+x ~/bin/sbt</pre></div>
+</div>
+
+</li>
+<li> Clone @dpp's example repo:
+<div class="CodeRay">
+  <div class="code"><pre>git clone https://github.com/dpp/starting_point.git</pre></div>
+</div>
+
+</li>
+<li> Run the "install every dependency and start the server" command (slow first time, faster subsequent times)
+<div class="CodeRay">
+  <div class="code"><pre>sbt update ~jetty-run</pre></div>
+</div>
+
+</li>
+<li> Verify <a href="http://localhost:8080/">http://localhost:8080/</a> responds.</li>
+</ol>
+<p><strong>This should work with most linux distros as well.</strong></p>
+<p>Note:  if it doesn't respond, then you might have hit "enter" while the `sbt update ~jetty-run` command was going... for some reason it will interpret the enter key as a SIGINT, so just re-run the `sbt update ~jetty-run` and reload in your browser.</p>

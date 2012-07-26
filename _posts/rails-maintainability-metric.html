@@ -1,0 +1,12 @@
+title: Rails Maintainability Metric
+date: 2011/06/20 14:40:00 -0700
+tags: []
+author: Aaron Blohowiak
+alias: /rails-maintainability-metric
+
+<div class="CodeRay">
+  <div class="code"><pre>grep -ir &quot;eval\|method_missing\|define_method\|instance_variable_set&quot; app lib/  | wc -l</pre></div>
+</div>
+
+<p>&nbsp;</p>
+<div>A score in the double digits should give pause, the tripple digits are scary and quadruple digits? run for the hills.</div>

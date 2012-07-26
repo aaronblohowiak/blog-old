@@ -1,0 +1,40 @@
+title: Converting from UnityScript to C# (c sharp)
+date: 2009/08/30 08:34:29 -0700
+tags: []
+author: Aaron Blohowiak
+alias: /converting-from-unityscript-to-c-c-sharp
+
+Here's a situation most Unity3d developers run into: you have scripts in both C# and unity JavaScript, and you can't get them to work together even after you figure out the bizarre compilation order because you want bi-directional communication.  What to do?  Unfortunately, it seems as though the only thing you <strong>can</strong> do is to convert the UnityScript (JavaScript) to C#. Unfortunately, there is no completely automated way to do this.
+
+Running the following search/replace in vim (what else?) in the following order gets you about 85% of the way there:
+<div class="CodeRay">
+  <div class="code"><pre>%s/var \(.*\) : \(.*\) = \(.*\);/\2 \1 = \3;/g</pre></div>
+</div>
+
+<div class="CodeRay">
+  <div class="code"><pre>%s/var \(.*\) : \(.*\);/\2 \1;/g</pre></div>
+</div>
+
+<div class="CodeRay">
+  <div class="code"><pre>%s/function \(.*\)() : \(.*\)/public \2 \1()/g</pre></div>
+</div>
+
+<div class="CodeRay">
+  <div class="code"><pre>%s/function \(.*\)/public void \1</pre></div>
+</div>
+
+<div class="CodeRay">
+  <div class="code"><pre>%s/boolean/bool</pre></div>
+</div>
+
+Other things that the above find/replaces won't catch are: foreach/for(a in b) dynamicly typed variables, variables whos types are implicit.. ie: var a = SomeFunction();, and it won't currently ensure that you have an 'f' following your floats -- 2.0f instead of 2.0.
+
+As I <a href="http://forum.unity3d.com/viewtopic.php?t=31226">mentioned</a> at the Unity3d forums:
+<blockquote class="posterous_medium_quote"><em>more of a PITA is getting around c#'s inability to set variables on member properties ( ie: foo.color.a becomes tmpclr = foo.color; tmpclr.a= 0.2f; foo.color = tmpclr); I decided to create class-specific private member variables to avoid dynamic variable allocation (so we dont have as much garbage to collect.) </em></blockquote>
+Finally, the last thing to worry about is how Unity3d implements coroutines in C#.. but I'll save that for another blog post.
+<div class="zemanta-pixie"><div class='p_embed p_image_embed'>
+<img alt="Media_httpimgzemantac_ntheu" height="1" src="/media/getfile/files.posterous.com/import-iyfl/jjIforCzpAnBwGgyjazGdfDAdekcvjcmDCkqwzsHksrymDybdhrIsHEbbipv/media_httpimgzemantac_ntHEu.gif.scaled696.gif" width="1" />
+</div>
+</div>
+<div class="zemanta-pixie">EDIT (09/18/09): More resources can be found at the <a href="http://8bitfeed.com/2009/09/c-unity-3d-resources/">excellent 8bit Feed. </a>
+</div>

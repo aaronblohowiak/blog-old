@@ -1,0 +1,23 @@
+title: Add this to your .bashrc for streamlined push and deploy on Joyent
+date: 2010/08/27 17:33:00 -0700
+tags: []
+author: Aaron Blohowiak
+alias: /add-this-to-your-bashrc-for-streamlined-push
+
+<p>Note: make sure to change NODEKODOMAIN to the one for your project.</p>
+<div class="CodeRay">
+  <div class="code"><pre>export NODEKODOMAIN=&quot;pants-pants-evolution.no.de&quot;
+alias push_and_restart=&quot;git push origin master &amp;&amp; git push joyent master &amp;&amp; ssh node@$NODEKODOMAIN 'source .profile &amp;&amp; node-service-restart'&quot;</pre></div>
+</div>
+
+<p>After adding this,</p>
+<div class="CodeRay">
+  <div class="code"><pre>source $HOME/.bashrc</pre></div>
+</div>
+
+<p>and then you can</p>
+<div class="CodeRay">
+  <div class="code"><pre>push_and_restart</pre></div>
+</div>
+
+<p>in your git repo and it should all "just work"  njoy !</p>

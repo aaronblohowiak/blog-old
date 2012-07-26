@@ -1,0 +1,41 @@
+title: Create a new git repo from a subdirectory
+date: 2011/10/01 10:35:00 -0700
+tags: []
+author: Aaron Blohowiak
+alias: /create-a-new-git-repo-from-a-subdirectory
+
+<p>I started a project (repo/) with a number of subdirectories:</p>
+<p>repo/</p>
+<p style="padding-left: 30px;">web/</p>
+<p style="padding-left: 30px;">ingester/</p>
+<p style="padding-left: 30px;">bulkendpoint/</p>
+<p style="padding-left: 30px;">doc/</p>
+<p style="padding-left: 30px;">...</p>
+<p>This worked fine in the beginning, but then I wanted to be able to branch, merge and deploy just the "web" subdirectory.</p>
+<p>It took a good 10 minutes of man pages and googling to put the pieces together, but here is what worked for me:</p>
+<div class="CodeRay">
+  <div class="code"><pre>#copy the whole repo.
+cp -r repo newrepo
+cd newrepo/
+
+#remove reference to the old remote from the new repo.
+git remote rm origin
+
+#delete everything that isn't in the repo (including stuff in the .gitignore)
+# this is optional, but nice to start clean!
+git clean -f -d -x .
+
+#this does most of the magic. will re-write your history!
+git filter-branch --subdirectory-filter web/ -- --all
+
+#the contents of web/ are now in the root of newrepo/
+ls
+
+#now, let's clean up all the references to old stuff in the newrepo/.git/ folder
+rm -Rf .git/refs/original
+rm -Rf .git/logs/
+git reflog expire --expire=now --all
+git gc --aggressive --prune=now</pre></div>
+</div>
+
+<p>Now all you have to do is set up your new remote and push!</p>
