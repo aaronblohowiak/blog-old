@@ -1,7 +1,6 @@
-Fork for your Telegram Blog
+My blog
 =============
 
+Contains the content of aaronblohowiak.com, most of which was written by me, Aaron Blohowiak.
 
-This is a template that you can fork into your own GitHub account
-and then point [Telegram](https://telegr.am) at your
-repository to your GitHub repo so you can publish your blog.
+If you'd like to republish or redistribute any of this material, please ask before doing so.
