@@ -8,7 +8,6 @@ I can ask for nothing more from my career as a programmer and have enjoyed fanta
 
 ## Contact Me
 
-@aaronblohowiak
 aaron.blohowiak@gmail.com
 
 ## Some things I've made or am developing:
