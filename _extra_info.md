@@ -1,7 +1,7 @@
 ---
 blog_root: /blog_posts
 site_title: Aaron Blohowiak's Blog
-
+template_url: https://github.com/aaronblohowiak/template-base.git
 ---
 
 This file contains _Extra Info_ about your site.  You can
